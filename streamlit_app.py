@@ -22,7 +22,7 @@ run_sim = st.button("Run ROI Simulation")
 if run_sim:
     # --- Constants ---
     years = 10
-    simulations = 100
+    simulations = 500
     base_fee_bps = 10.0
 
     # Returns and risk assumptions
