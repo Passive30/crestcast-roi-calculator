@@ -12,7 +12,7 @@ st.markdown("**Quantify the impact of macro-aware investing with Passive 3.0™*
 aum = st.number_input("Total AUM on Platform ($)", min_value=1_000_000, value=100_000_000, step=1_000_000)
 allocation_pct = st.slider("Estimated Allocation to CrestCast Strategy (%)", 0, 100, 50)
 base_fee = st.slider("Base Fee Charged to Client (bps)", 0, 25, 10)
-overlay_fee = st.number_input("CrestCast Overlay Fee Charged to Client (bps)", min_value=0.0, value=35.0)
+overlay_fee = st.number_input("Overlay Fee Charged to Client (bps)", min_value=0.0, value=35.0)
 licensing_fee = st.number_input("Licensing Fee to CrestCast (bps)", min_value=0.0, value=15.0)
 retention_lift = st.number_input("Client Retention Lift (%)", min_value=0.0, value=10.0)
 organic_growth = st.slider("Expected Organic Growth Rate (Annual %)", 0, 50, 25)
@@ -30,7 +30,7 @@ run_sim = st.button("Run ROI Simulation")
 if run_sim:
     # --- Constants ---
     years = 10
-    simulations = 1000
+    simulations = 100
 
     # CrestCast Assumptions
     crestcast_return = 0.1285
@@ -38,20 +38,31 @@ if run_sim:
 
     allocated_aum = aum * (allocation_pct / 100)
 
-    # Monte Carlo Simulations
+    # Convert fees to decimal form
+    crestcast_fee_decimal = (base_fee + overlay_fee - licensing_fee) / 10000
+    benchmark_fee_decimal = (base_fee + tlh_uplift_bps) / 10000
+
+    # Simulate returns
     crestcast_returns = np.random.normal(crestcast_return, crestcast_std_dev, (simulations, years))
-    crestcast_growth = allocated_aum * np.cumprod(1 + crestcast_returns + (organic_growth / 100), axis=1)
-    crestcast_median = np.median(crestcast_growth, axis=0)
-
     benchmark_returns = np.random.normal(benchmark_return, benchmark_std_dev, (simulations, years))
-    benchmark_growth = allocated_aum * np.cumprod(1 + benchmark_returns + (organic_growth / 100), axis=1)
-    benchmark_median = np.median(benchmark_growth, axis=0)
 
-    # Revenue logic
+    # Apply fees to returns (net returns)
+    crestcast_net_returns = crestcast_returns - crestcast_fee_decimal
+    benchmark_net_returns = benchmark_returns - benchmark_fee_decimal
+
+    # Compound net returns
+    crestcast_net_growth = allocated_aum * np.cumprod(1 + crestcast_net_returns, axis=1)
+    benchmark_net_growth = allocated_aum * np.cumprod(1 + benchmark_net_returns, axis=1)
+
+    # Median values for client and revenue
+    crestcast_median_value = np.median(crestcast_net_growth, axis=0)
+    benchmark_median_value = np.median(benchmark_net_growth, axis=0)
+
     crestcast_net_fee_bps = base_fee + overlay_fee - licensing_fee
     benchmark_fee_bps = base_fee + tlh_uplift_bps
-    rev_crestcast = crestcast_median * (crestcast_net_fee_bps / 10000)
-    rev_benchmark = benchmark_median * (benchmark_fee_bps / 10000)
+
+    rev_crestcast = crestcast_median_value * (crestcast_net_fee_bps / 10000)
+    rev_benchmark = benchmark_median_value * (benchmark_fee_bps / 10000)
 
     # --- Annual Revenue Bar Chart ---
     st.subheader("Projected Annual Revenue by Year")
@@ -75,12 +86,9 @@ if run_sim:
 
     # --- Client Value Net of Fees ---
     st.subheader("Client Account Value (Net of Fees) Over 10 Years")
-    crestcast_net_value = crestcast_median * (1 - (crestcast_net_fee_bps / 10000))
-    benchmark_net_value = benchmark_median * (1 - (benchmark_fee_bps / 10000))
-
     fig2, ax2 = plt.subplots()
-    ax2.plot(years_range, crestcast_net_value, label="CrestCast (Net of Fees)", color="blue")
-    ax2.plot(years_range, benchmark_net_value, label=f"{benchmark_choice} (Net of Fees)", color="gray")
+    ax2.plot(years_range, crestcast_median_value, label="CrestCast (Net of Fees)", color="blue")
+    ax2.plot(years_range, benchmark_median_value, label=f"{benchmark_choice} (Net of Fees)", color="gray")
     ax2.set_ylabel("Client Value ($)")
     ax2.set_xlabel("Year")
     ax2.legend()
