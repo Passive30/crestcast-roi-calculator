@@ -12,7 +12,7 @@ st.markdown("**Quantify the impact of macro-aware investing with Passive 3.0™*
 aum = st.number_input("Total AUM on Platform ($)", min_value=1_000_000, value=100_000_000, step=1_000_000)
 allocation_pct = st.slider("Estimated Allocation to CrestCast Strategy (%)", 0, 100, 50)
 base_fee = st.slider("Base Fee Charged to Client (bps)", 0, 25, 10)
-overlay_fee = st.number_input("Overlay Fee Charged to Client (bps)", min_value=0.0, value=35.0)
+overlay_fee = st.number_input("CrestCast Overlay Fee Charged to Client (bps)", min_value=0.0, value=35.0)
 licensing_fee = st.number_input("Licensing Fee to CrestCast (bps)", min_value=0.0, value=15.0)
 retention_lift = st.number_input("Client Retention Lift (%)", min_value=0.0, value=10.0)
 organic_growth = st.slider("Expected Organic Growth Rate (Annual %)", 0, 50, 25)
@@ -30,7 +30,7 @@ run_sim = st.button("Run ROI Simulation")
 if run_sim:
     # --- Constants ---
     years = 10
-    simulations = 100
+    simulations = 1000
 
     # CrestCast Assumptions
     crestcast_return = 0.1285
