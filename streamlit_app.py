@@ -30,7 +30,7 @@ run_sim = st.button("Run ROI Simulation")
 if run_sim:
     # --- Constants ---
     years = 10
-    simulations = 100
+    simulations = 1000
 
     # CrestCast Assumptions
     crestcast_return = 0.1285
